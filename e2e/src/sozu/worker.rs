@@ -23,6 +23,7 @@ use sozu_command::{
 
 use crate::sozu::command_id::CommandID;
 
+/// Handle to a detached thread where a Sozu worker runs
 pub struct Worker {
     pub scm_socket: ScmSocket,
     pub command_channel: Channel<ProxyRequest, ProxyResponse>,

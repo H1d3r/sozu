@@ -1,3 +1,5 @@
+/// Utility struct to generate unique command ids by auto increment
+/// and keep track of the last id used
 pub struct CommandID {
     pub id: usize,
     pub prefix: String,

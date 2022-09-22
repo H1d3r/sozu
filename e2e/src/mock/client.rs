@@ -4,6 +4,7 @@ use std::{
     str::from_utf8,
 };
 
+/// Wrapper over a TCP connection
 pub struct Client {
     pub name: String,
     pub address: SocketAddr,

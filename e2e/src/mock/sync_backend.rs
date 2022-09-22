@@ -5,6 +5,8 @@ use std::{
     str::from_utf8,
 };
 
+/// A mock backend whose actions are all synchronous (accepting, receiving, responding...)
+/// this should help reproductibility by enforcing a strict order on those actions
 pub struct Backend {
     pub name: String,
     pub address: SocketAddr,

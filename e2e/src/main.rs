@@ -17,6 +17,13 @@ use mock::{
     sync_backend::Backend as SyncBackend,
 };
 
+/// Setup a Sozu worker with
+/// - `config`
+/// - `listeners`
+/// - 1 active HttpListener on `front_address`
+/// - 1 cluster ("cluster_0")
+/// - 1 HttpFrontend for "cluster_0" on `front_address`
+/// - n backends ("cluster_0-{0..n}")
 fn test_setup(
     config: Config,
     listeners: Listeners,

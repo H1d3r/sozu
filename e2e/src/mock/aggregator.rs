@@ -1,3 +1,4 @@
+/// Used to hold and accumulate any data on an asynchornous task
 pub trait Aggregator {}
 
 #[derive(Debug, Clone)]
