@@ -69,10 +69,13 @@ impl Worker {
             tcp: Vec::new(),
         }
     }
+    pub fn into_config(config: FileConfig) -> Config {
+        config.into("").expect("could not create Config")
+    }
     pub fn empty_config() -> (Config, Listeners) {
         let listeners = Worker::empty_listeners();
         let config = Worker::empty_file_config();
-        let config = config.into("./config.toml");
+        let config = Worker::into_config(config);
         (config, listeners)
     }
 

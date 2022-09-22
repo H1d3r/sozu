@@ -213,12 +213,12 @@ fn test_issue_806(nb_requests: usize, zombie: bool) {
         .parse()
         .expect("could not parse front address");
 
-    let config = FileConfig {
+    let config = Worker::into_config(FileConfig {
         zombie_check_interval: if zombie { Some(1) } else { None },
         ..Worker::empty_file_config()
-    };
+    });
     let listeners = Worker::empty_listeners();
-    let (worker, mut backends) = async_test_setup(config.into(""), listeners, front_address, 2);
+    let (worker, mut backends) = async_test_setup(config, listeners, front_address, 2);
     let mut backend2 = backends.pop().expect("backend2");
     let mut backend1 = backends.pop().expect("backend1");
 
