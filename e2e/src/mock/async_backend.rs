@@ -6,7 +6,10 @@ use std::{
 
 use futures::channel::mpsc;
 
-use crate::{mock::aggregator::{Aggregator, SimpleAggregator}, http::http_response};
+use crate::{
+    http::http_response,
+    mock::aggregator::{Aggregator, SimpleAggregator},
+};
 
 /// Handle to a detached thread where a TcpListener runs
 pub struct Backend<T> {

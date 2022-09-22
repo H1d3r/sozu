@@ -31,8 +31,8 @@ pub struct Worker {
 }
 
 impl Worker {
-    pub fn empty_config() -> (Config, Listeners) {
-        let config = FileConfig {
+    pub fn empty_file_config() -> FileConfig {
+        FileConfig {
             command_socket: None,
             saved_state: None,
             automatic_state_save: None,
@@ -60,13 +60,19 @@ impl Worker {
             connect_timeout: None,
             zombie_check_interval: None,
             accept_queue_timeout: None,
-        };
-        let config = config.into("./config.toml");
-        let listeners = Listeners {
+        }
+    }
+    pub fn empty_listeners() -> Listeners {
+        Listeners {
             http: Vec::new(),
             tls: Vec::new(),
             tcp: Vec::new(),
-        };
+        }
+    }
+    pub fn empty_config() -> (Config, Listeners) {
+        let listeners = Worker::empty_listeners();
+        let config = Worker::empty_file_config();
+        let config = config.into("./config.toml");
         (config, listeners)
     }
 
@@ -141,8 +147,15 @@ impl Worker {
 
     pub fn stop(mut self) {
         self.send_proxy_request(ProxyRequestOrder::HardStop);
-        println!("waiting...");
-        self.job.join().expect("could not join");
+        if self.job.is_finished() {
+            println!("already finished...");
+        } else {
+            println!("waiting...");
+            match self.job.join() {
+                Ok(_) => println!("finished!"),
+                Err(error) => println!("could not join: {:#?}", error),
+            }
+        }
     }
 
     pub fn default_http_listener(address: SocketAddr) -> HttpListener {

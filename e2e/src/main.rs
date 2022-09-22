@@ -1,5 +1,9 @@
 use http::{http_request, http_response};
-use sozu_command_lib::proxy::{ActivateListener, ListenerType, ProxyRequestOrder};
+use sozu_command_lib::{
+    config::{Config, FileConfig},
+    proxy::{ActivateListener, ListenerType, ProxyRequestOrder},
+    scm_socket::Listeners,
+};
 use std::net::SocketAddr;
 
 mod http;
@@ -13,8 +17,12 @@ use mock::{
     sync_backend::Backend as SyncBackend,
 };
 
-fn test_setup(front_address: SocketAddr, nb_backends: usize) -> (Worker, Vec<SocketAddr>) {
-    let (config, listeners) = Worker::empty_config();
+fn test_setup(
+    config: Config,
+    listeners: Listeners,
+    front_address: SocketAddr,
+    nb_backends: usize,
+) -> (Worker, Vec<SocketAddr>) {
     let mut worker = Worker::start_new_worker(config, listeners);
 
     worker.send_proxy_request(ProxyRequestOrder::AddHttpListener(
@@ -50,10 +58,12 @@ fn test_setup(front_address: SocketAddr, nb_backends: usize) -> (Worker, Vec<Soc
 }
 
 fn async_test_setup(
+    config: Config,
+    listeners: Listeners,
     front_address: SocketAddr,
     nb_backends: usize,
 ) -> (Worker, Vec<AsyncBackend<SimpleAggregator>>) {
-    let (worker, backends) = test_setup(front_address, nb_backends);
+    let (worker, backends) = test_setup(config, listeners, front_address, nb_backends);
     let backends = backends
         .into_iter()
         .enumerate()
@@ -73,8 +83,13 @@ fn async_test_setup(
     (worker, backends)
 }
 
-fn sync_test_setup(front_address: SocketAddr, nb_backends: usize) -> (Worker, Vec<SyncBackend>) {
-    let (worker, backends) = test_setup(front_address, nb_backends);
+fn sync_test_setup(
+    config: Config,
+    listeners: Listeners,
+    front_address: SocketAddr,
+    nb_backends: usize,
+) -> (Worker, Vec<SyncBackend>) {
+    let (worker, backends) = test_setup(config, listeners, front_address, nb_backends);
     let backends = backends
         .into_iter()
         .enumerate()
@@ -94,7 +109,8 @@ fn test_async(nb_requests: usize) {
         .parse()
         .expect("could not parse front address");
 
-    let (worker, mut backends) = async_test_setup(front_address, 3);
+    let (config, listeners) = Worker::empty_config();
+    let (worker, mut backends) = async_test_setup(config, listeners, front_address, 3);
 
     let mut clients = (0..10)
         .map(|i| {
@@ -139,7 +155,8 @@ fn test_sync(nb_requests: usize) {
         .parse()
         .expect("could not parse front address");
 
-    let (worker, mut backends) = sync_test_setup(front_address, 1);
+    let (config, listeners) = Worker::empty_config();
+    let (worker, mut backends) = sync_test_setup(config, listeners, front_address, 1);
     let mut backend = backends.pop().unwrap();
 
     backend.connect();
@@ -191,12 +208,17 @@ fn test_sync(nb_requests: usize) {
     worker.stop();
 }
 
-fn test_issue_806(nb_requests: usize) {
+fn test_issue_806(nb_requests: usize, zombie: bool) {
     let front_address = "127.0.0.1:2001"
         .parse()
         .expect("could not parse front address");
 
-    let (worker, mut backends) = async_test_setup(front_address, 2);
+    let config = FileConfig {
+        zombie_check_interval: if zombie { Some(1) } else { None },
+        ..Worker::empty_file_config()
+    };
+    let listeners = Worker::empty_listeners();
+    let (worker, mut backends) = async_test_setup(config.into(""), listeners, front_address, 2);
     let mut backend2 = backends.pop().expect("backend2");
     let mut backend1 = backends.pop().expect("backend1");
 
@@ -230,8 +252,9 @@ fn test_issue_806(nb_requests: usize) {
 }
 
 fn main() {
-    // https://github.com/sozu-proxy/sozu/issues/806
     test_sync(100);
     test_async(100);
-    test_issue_806(2);
+    // https://github.com/sozu-proxy/sozu/issues/806
+    test_issue_806(2, false);
+    test_issue_806(2, true);
 }
