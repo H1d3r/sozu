@@ -859,144 +859,58 @@ pub enum QueryAnswerMetrics {
 }
 
 impl ProxyRequestOrder {
-    pub fn get_topics(&self) -> HashSet<Topic> {
+    pub fn get_topics(&self) -> Topics {
+        let mut topics = Topics {
+            http_proxy_config: false,
+            https_proxy_config: false,
+            tcp_proxy_config: false,
+        };
+
         match *self {
-            ProxyRequestOrder::AddCluster(_) => [
-                Topic::HttpProxyConfig,
-                Topic::HttpsProxyConfig,
-                Topic::TcpProxyConfig,
-            ]
-            .iter()
-            .cloned()
-            .collect(),
-            ProxyRequestOrder::RemoveCluster { cluster_id: _ } => [
-                Topic::HttpProxyConfig,
-                Topic::HttpsProxyConfig,
-                Topic::TcpProxyConfig,
-            ]
-            .iter()
-            .cloned()
-            .collect(),
-            ProxyRequestOrder::AddHttpFrontend(_) => {
-                [Topic::HttpProxyConfig].iter().cloned().collect()
+            ProxyRequestOrder::AddHttpFrontend(_)
+            | ProxyRequestOrder::AddHttpListener(_)
+            | ProxyRequestOrder::RemoveHttpFrontend(_) => topics.http_proxy_config = true,
+
+            ProxyRequestOrder::AddHttpsFrontend(_)
+            | ProxyRequestOrder::RemoveHttpsFrontend(_)
+            | ProxyRequestOrder::AddCertificate(_)
+            | ProxyRequestOrder::ReplaceCertificate(_)
+            | ProxyRequestOrder::RemoveCertificate(_)
+            | ProxyRequestOrder::AddHttpsListener(_)
+            | ProxyRequestOrder::Query(_) => topics.https_proxy_config = true,
+
+            ProxyRequestOrder::AddTcpFrontend(_)
+            | ProxyRequestOrder::RemoveTcpFrontend(_)
+            | ProxyRequestOrder::AddTcpListener(_) => topics.tcp_proxy_config = true,
+
+            ProxyRequestOrder::AddCluster(_)
+            | ProxyRequestOrder::AddBackend(_)
+            | ProxyRequestOrder::RemoveCluster { cluster_id: _ }
+            | ProxyRequestOrder::RemoveBackend(_)
+            | ProxyRequestOrder::RemoveListener(_)
+            | ProxyRequestOrder::ActivateListener(_)
+            | ProxyRequestOrder::DeactivateListener(_)
+            | ProxyRequestOrder::SoftStop
+            | ProxyRequestOrder::HardStop
+            | ProxyRequestOrder::Status
+            | ProxyRequestOrder::Logging(_) => {
+                topics.http_proxy_config = true;
+                topics.https_proxy_config = true;
+                topics.tcp_proxy_config = true;
             }
-            ProxyRequestOrder::RemoveHttpFrontend(_) => {
-                [Topic::HttpProxyConfig].iter().cloned().collect()
-            }
-            ProxyRequestOrder::AddHttpsFrontend(_) => {
-                [Topic::HttpsProxyConfig].iter().cloned().collect()
-            }
-            ProxyRequestOrder::RemoveHttpsFrontend(_) => {
-                [Topic::HttpsProxyConfig].iter().cloned().collect()
-            }
-            ProxyRequestOrder::AddCertificate(_) => {
-                [Topic::HttpsProxyConfig].iter().cloned().collect()
-            }
-            ProxyRequestOrder::ReplaceCertificate(_) => {
-                [Topic::HttpsProxyConfig].iter().cloned().collect()
-            }
-            ProxyRequestOrder::RemoveCertificate(_) => {
-                [Topic::HttpsProxyConfig].iter().cloned().collect()
-            }
-            ProxyRequestOrder::AddTcpFrontend(_) => {
-                [Topic::TcpProxyConfig].iter().cloned().collect()
-            }
-            ProxyRequestOrder::RemoveTcpFrontend(_) => {
-                [Topic::TcpProxyConfig].iter().cloned().collect()
-            }
-            ProxyRequestOrder::AddBackend(_) => [
-                Topic::HttpProxyConfig,
-                Topic::HttpsProxyConfig,
-                Topic::TcpProxyConfig,
-            ]
-            .iter()
-            .cloned()
-            .collect(),
-            ProxyRequestOrder::RemoveBackend(_) => [
-                Topic::HttpProxyConfig,
-                Topic::HttpsProxyConfig,
-                Topic::TcpProxyConfig,
-            ]
-            .iter()
-            .cloned()
-            .collect(),
-            ProxyRequestOrder::AddHttpListener(_) => {
-                [Topic::HttpProxyConfig].iter().cloned().collect()
-            }
-            ProxyRequestOrder::AddHttpsListener(_) => {
-                [Topic::HttpsProxyConfig].iter().cloned().collect()
-            }
-            ProxyRequestOrder::AddTcpListener(_) => {
-                [Topic::TcpProxyConfig].iter().cloned().collect()
-            }
-            ProxyRequestOrder::RemoveListener(_) => [
-                Topic::HttpProxyConfig,
-                Topic::HttpsProxyConfig,
-                Topic::TcpProxyConfig,
-            ]
-            .iter()
-            .cloned()
-            .collect(),
-            ProxyRequestOrder::ActivateListener(_) => [
-                Topic::HttpProxyConfig,
-                Topic::HttpsProxyConfig,
-                Topic::TcpProxyConfig,
-            ]
-            .iter()
-            .cloned()
-            .collect(),
-            ProxyRequestOrder::DeactivateListener(_) => [
-                Topic::HttpProxyConfig,
-                Topic::HttpsProxyConfig,
-                Topic::TcpProxyConfig,
-            ]
-            .iter()
-            .cloned()
-            .collect(),
-            ProxyRequestOrder::Query(_) => [Topic::HttpsProxyConfig].iter().cloned().collect(),
-            ProxyRequestOrder::SoftStop => [
-                Topic::HttpProxyConfig,
-                Topic::HttpsProxyConfig,
-                Topic::TcpProxyConfig,
-            ]
-            .iter()
-            .cloned()
-            .collect(),
-            ProxyRequestOrder::HardStop => [
-                Topic::HttpProxyConfig,
-                Topic::HttpsProxyConfig,
-                Topic::TcpProxyConfig,
-            ]
-            .iter()
-            .cloned()
-            .collect(),
-            ProxyRequestOrder::Status => [
-                Topic::HttpProxyConfig,
-                Topic::HttpsProxyConfig,
-                Topic::TcpProxyConfig,
-            ]
-            .iter()
-            .cloned()
-            .collect(),
-            ProxyRequestOrder::ConfigureMetrics(_) => HashSet::new(),
-            ProxyRequestOrder::Logging(_) => [
-                Topic::HttpsProxyConfig,
-                Topic::HttpProxyConfig,
-                Topic::TcpProxyConfig,
-            ]
-            .iter()
-            .cloned()
-            .collect(),
-            ProxyRequestOrder::ReturnListenSockets => HashSet::new(),
+
+            ProxyRequestOrder::ConfigureMetrics(_) => {}
+            ProxyRequestOrder::ReturnListenSockets => {}
         }
+        topics
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum Topic {
-    HttpProxyConfig,
-    HttpsProxyConfig,
-    TcpProxyConfig,
+pub struct Topics {
+    pub http_proxy_config: bool,
+    pub https_proxy_config: bool,
+    pub tcp_proxy_config: bool,
 }
 
 /*

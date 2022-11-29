@@ -25,7 +25,7 @@ use crate::{
         proxy::{
             ListenerType, MessageId, ProxyEvent, ProxyRequest, ProxyRequestOrder, ProxyResponse,
             ProxyResponseContent, ProxyResponseStatus, Query, QueryAnswer, QueryAnswerCertificate,
-            QueryCertificateType, QueryClusterType, Topic,
+            QueryCertificateType, QueryClusterType,
         },
         ready::Ready,
         scm_socket::{Listeners, ScmSocket},
@@ -1026,7 +1026,7 @@ impl Server {
 
         let topics = message.order.get_topics();
 
-        if topics.contains(&Topic::HttpProxyConfig) {
+        if topics.http_proxy_config {
             match message {
                 // special case for AddHttpListener because we need to register a listener
                 ProxyRequest {
@@ -1167,7 +1167,7 @@ impl Server {
                 ref m => push_queue(self.http.borrow_mut().notify(m.clone())),
             }
         }
-        if topics.contains(&Topic::HttpsProxyConfig) {
+        if topics.https_proxy_config {
             match message {
                 // special case for AddHttpListener because we need to register a listener
                 ProxyRequest {
@@ -1307,7 +1307,7 @@ impl Server {
                 ref m => push_queue(self.https.borrow_mut().notify(m.clone())),
             }
         }
-        if topics.contains(&Topic::TcpProxyConfig) {
+        if topics.tcp_proxy_config {
             match message {
                 // special case for AddTcpFront because we need to register a listener
                 ProxyRequest {

@@ -216,6 +216,10 @@ cipher_list = [
 #key = "../lib/assets/key_test.pem"
 #certificate_chain = "../lib/assets/certificate_chain.pem"
 
+[[listeners]]
+protocol = "http"
+address = "127.0.0.1:8081"
+
 # options specific to a TCP proxy listener
 #[[listeners]]
 # protocol = "tcp"
@@ -273,7 +277,7 @@ frontends = [
 # - weight: weight used by the load balancing algorithm
 # - sticky-id: sticky session identifier
 backends = [
-    { address = "127.0.0.1:1026", backend_id = "the-backend-to-my-app" }
+    { address = "127.0.0.1:1026", backend_id = "the-backend-to-my-app" },
 ]
 
 # this is an example of a routing configuration for the TCP proxy
@@ -281,13 +285,8 @@ backends = [
 protocol = "tcp"
 
 frontends = [
-    { address = "0.0.0.0:8081", tags = { owner = "John", uuid = "3f740af1-45fd-45ce-b61f-17bf1a51505f" } }
+    { address = "0.0.0.0:8081", tags = { owner = "John", uuid = "3f740af1-45fd-45ce-b61f-17bf1a51505f" } },
 ]
 
 # activates the proxy protocol to send IP information to the backend
 # send_proxy = false
-
-backends = [
-    { address = "127.0.0.1:4000", weight = 100 },
-    { address = "127.0.0.1:4001", weight = 50 }
-]
